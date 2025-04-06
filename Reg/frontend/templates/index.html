@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #3e3335;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+        }
+
+        .main-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            text-align: center;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: gray;
+            cursor: not-allowed;
+        }
+
+        #alert-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff4444;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+        
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">GUARDAI</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'history' %}">History</a></li>
+            {% if request.user.is_authenticated %}
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+            {% else %}
+            <li><a href="{% url 'register' %}">Register</a></li>
+            {% endif %}
+        </ul>
+    </header>
+
+    <section class="main-section">
+        <div>
+            <h1>Welcome to GuardAI</h1>
+            <p>Click the button below to start/stop detection.</p>
+            
+            <form id="action-form" data-url="{% url 'control_detection' %}">
+                {% csrf_token %}
+                <!-- <button type="button" id="start-btn">Start Detection</button> -->
+                <button type="button" id="start-detection-btn">Start Detection</button>
+                <button type="button" id="start-fire-btn">Start Fire Detection</button>
+
+            </form>
+        </div>
+    </section>
+
+    <!-- Alert Box -->
+    <div id="alert-box"></div>
+
+    <script>
+        // $(document).ready(function() {
+        //     const controlUrl = $("#action-form").data("url");
+        //     const checkUrl = "{% url 'check_detection' %}";
+        //     const resetUrl = "{% url 'reset_detection' %}";
+        //     let detectionInterval;
+        
+        //     function getCSRFToken() {
+        //         const name = 'csrftoken';
+        //         const cookies = document.cookie.split(';');
+        //         for (let cookie of cookies) {
+        //             const [key, value] = cookie.trim().split('=');
+        //             if (key === name) return value;
+        //         }
+        //         return '';
+        //     }
+        
+        //     // Show alert message
+        //     function showAlert(message) {
+        //         $("#alert-box").text(message).fadeIn();
+        
+        //         // Hide after 5 seconds
+        //         setTimeout(function() {
+        //             $("#alert-box").fadeOut();
+        
+        //             // Reset detection status after alert is hidden
+        //             $.ajax({
+        //                 url: resetUrl,
+        //                 method: "POST",
+        //                 data: {
+        //                     csrfmiddlewaretoken: getCSRFToken()
+        //                 }
+        //             });
+        //         }, 5000);
+        //     }
+        
+        //     // Poll the server for detection status
+        //     function checkDetectionStatus() {
+        //         $.get(checkUrl, function(response) {
+        //             if (response.status === "Detected") {
+        //                 showAlert("⚠️ High-confidence object detected: " + response.detections.join(", "));
+        //                 clearInterval(detectionInterval);
+        //             }
+        //         });
+        //     }
+        
+        //     $("#start-btn").click(function() {
+        //         const startButton = $(this);
+        //         startButton.prop("disabled", true).text("Processing...");
+        
+        //         $.ajax({
+        //             url: controlUrl,
+        //             method: "POST",
+        //             data: {
+        //                 csrfmiddlewaretoken: getCSRFToken()
+        //             },
+        //             success: function(response) {
+        //                 console.log(response);
+        //                 if (response.status === "Recording started") {
+        //                     startButton.text("Stop Detection").prop("disabled", false);
+        //                     detectionInterval = setInterval(checkDetectionStatus, 1000);
+        //                 } else if (response.status === "Recording stopped") {
+        //                     startButton.text("Start Detection").prop("disabled", false);
+        //                     clearInterval(detectionInterval);
+        //                 }
+        //             },
+        //             error: function(xhr, status, error) {
+        //                 alert("An error occurred: " + error);
+        //                 startButton.text("Start Detection").prop("disabled", false);
+        //             }
+        //         });
+        //     });
+        // });
+        
+
+
+
+
+
+
+
+        $(document).ready(function() {
+    const controlUrl = $("#action-form").data("url");
+    const checkUrl = "{% url 'check_detection' %}";
+    const resetUrl = "{% url 'reset_detection' %}";
+    let detectionInterval;
+
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === name) return value;
+        }
+        return '';
+    }
+
+    function showAlert(message) {
+        $("#alert-box").text(message).fadeIn();
+        setTimeout(function() {
+            $("#alert-box").fadeOut();
+            $.ajax({
+                url: resetUrl,
+                method: "POST",
+                data: {
+                    csrfmiddlewaretoken: getCSRFToken()
+                }
+            });
+        }, 5000);
+    }
+
+    function checkDetectionStatus() {
+        $.get(checkUrl, function(response) {
+            if (response.status === "Detected") {
+                showAlert("⚠️ High-confidence object detected: " + response.detections.join(", "));
+                clearInterval(detectionInterval);
+            }
+        });
+    }
+
+    // Handle button clicks and send appropriate type
+    $("#start-detection-btn, #start-fire-btn").click(function() {
+        const startButton = $(this);
+        const detectionType = startButton.attr("id") === "start-detection-btn" ? "detection" : "fire";
+
+        startButton.prop("disabled", true).text("Processing...");
+
+        $.ajax({
+            url: controlUrl,
+            method: "POST",
+            data: {
+                csrfmiddlewaretoken: getCSRFToken(),
+                type: detectionType  // Pass the type to the backend
+            },
+            success: function(response) {
+                if (response.status === "Recording started") {
+                    startButton.text("Stop " + detectionType.charAt(0).toUpperCase() + detectionType.slice(1) + " Detection").prop("disabled", false);
+                    detectionInterval = setInterval(checkDetectionStatus, 1000);
+                } else if (response.status === "Recording stopped") {
+                    startButton.text("Start " + detectionType.charAt(0).toUpperCase() + detectionType.slice(1) + " Detection").prop("disabled", false);
+                    clearInterval(detectionInterval);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("An error occurred: " + error);
+                startButton.text("Start " + detectionType.charAt(0).toUpperCase() + detectionType.slice(1) + " Detection").prop("disabled", false);
+            }
+        });
+    });
+});
+
+    </script>
+</body>
+</html>

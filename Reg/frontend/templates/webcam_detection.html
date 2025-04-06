@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Detection</title>
+    <style>
+        /* Add your custom styles here */
+        #video-container {
+            text-align: center;
+        }
+        #video {
+            width: 80%;
+            height: auto;
+            border: 2px solid black;
+        }
+        #detection-results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <video id="video" autoplay></video>
+    </div>
+
+    <div id="detection-results">
+        <h3>Detected Objects:</h3>
+        <ul id="results-list"></ul>
+    </div>
+
+    <button onclick="startDetection()">Start Detection</button>
+
+    <script>
+        const videoElement = document.getElementById('video');
+        const resultsList = document.getElementById('results-list');
+
+        // Access webcam stream
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                videoElement.srcObject = stream;
+            })
+            .catch(error => {
+                console.error('Error accessing webcam:', error);
+            });
+
+        function startDetection() {
+            // Perform an AJAX call to start detection
+            fetch("{% url 'webcam_detection' %}", {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    updateDetectionResults(data.detections);
+                } else {
+                    alert('Error with webcam detection');
+                }
+            })
+            .catch(error => {
+                console.error('Error with AJAX request:', error);
+            });
+        }
+
+        function updateDetectionResults(detections) {
+            resultsList.innerHTML = '';  // Clear previous results
+            detections.forEach(detection => {
+                const listItem = document.createElement('li');
+                listItem.textContent = detection;
+                resultsList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>

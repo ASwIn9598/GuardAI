@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'stylee.css' %}">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="title-text">
+            <div class="title login">Login Form</div>
+            <div class="title signup">Signup Form</div>
+        </div>
+        <div class="form-container">
+            <div class="slide-controls">
+                <input type="radio" name="slide" id="login" {% if active_form == "login" %}checked{% endif %}>
+                <input type="radio" name="slide" id="signup" {% if active_form == "signup" %}checked{% endif %}>
+                <label for="login" class="slide login">Login</label>
+                <label for="signup" class="slide signup">Signup</label>
+                <div class="slider-tab"></div>
+            </div>
+            <div class="form-inner">
+                <!-- Login Form -->
+                <form method="post" action="{% url 'login' %}" class="login">
+                    {% csrf_token %}
+                    <div class="field">
+                        <input type="text" name="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="field">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    {% comment %} <div class="pass-link"><a href="#">Forgot password?</a></div> {% endcomment %}
+                    <div class="field btn">
+                        <div class="btn-layer"></div>
+                        <input type="submit" value="Login" name="login">
+                    </div>
+                    <div class="signup-link">Not a member? <a href="#">Signup now</a></div>
+                </form>
+
+                <!-- Signup Form -->
+                <form method="post" action="{% url 'register' %}" class="signup">
+                    {% csrf_token %}
+                    <div class="field">
+                        <input type="text" name="fname" placeholder="Full name" required>
+                    </div>
+                    <div class="field">
+                        <input type="tel" name="phone" placeholder="Phone number" required>
+                    </div>
+                    <div class="field">
+                        <input type="text" name="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="field">
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="field">
+                        <input type="password" name="confirm_password" placeholder="Confirm password" required>
+                    </div>
+                    <div class="field btn">
+                        <div class="btn-layer"></div>
+                        <input type="submit" value="Signup" name="signup">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'action.js' %}"></script>
+</body>
+</html>
